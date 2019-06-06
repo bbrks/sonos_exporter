@@ -3,20 +3,33 @@ package main
 import (
 	"flag"
 	"log"
+	"net"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+const (
+	appName = "Sonos exporter"
+	defaultAddr = ":1915"
+	metricsPath = "/metrics"
+)
+
 func main() {
-	flagAddress := flag.String("address", "localhost:1915", "Listen address")
+	flagAddress := flag.String("address", defaultAddr, "Listen address")
 	flag.Parse()
 
 	prometheus.MustRegister(collectionErrors)
 	prometheus.MustRegister(collector{})
 
-	log.Printf("Sonos exporter listening on %s", *flagAddress)
-	http.Handle("/metrics", promhttp.Handler())
-	log.Fatal(http.ListenAndServe(*flagAddress, nil))
+	http.Handle(metricsPath, promhttp.Handler())
+
+	l, err := net.Listen("tcp", *flagAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("%v listening on http://%s", appName, l.Addr().String())
+	log.Fatal(http.Serve(l, nil))
 }
