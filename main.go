@@ -9,15 +9,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var	flagAddress = flag.String("address", "localhost:1915", "Listen address")
+func main() {
+	flagAddress := flag.String("address", "localhost:1915", "Listen address")
+	flag.Parse()
 
-func init() {
 	prometheus.MustRegister(collectionErrors)
 	prometheus.MustRegister(collector{})
-}
-
-func main() {
-	flag.Parse()
 
 	log.Printf("Sonos exporter listening on %s", *flagAddress)
 	http.Handle("/metrics", promhttp.Handler())
