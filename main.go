@@ -23,6 +23,7 @@ func main() {
 	prometheus.MustRegister(collectionErrors)
 	prometheus.MustRegister(collector{})
 
+	http.HandleFunc("/", indexHandler)
 	http.Handle(metricsPath, promhttp.Handler())
 
 	l, err := net.Listen("tcp", *flagAddress)
@@ -30,6 +31,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("%v listening on http://%s", appName, l.Addr().String())
+	log.Printf("%s listening on http://%s", appName, l.Addr().String())
 	log.Fatal(http.Serve(l, nil))
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	responseHTML := `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>`+appName+`</title>
+</head>
+<body>
+	<h1>`+appName+`</h1>
+	<a href="`+metricsPath+`">`+metricsPath+`</a>
+</body>
+</html>`
+
+	w.Write([]byte(responseHTML))
 }
